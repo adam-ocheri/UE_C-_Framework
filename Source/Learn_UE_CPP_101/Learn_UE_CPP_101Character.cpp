@@ -377,9 +377,7 @@ void ALearn_UE_CPP_101Character::OnHit(UPrimitiveComponent* HitComponent, AActor
 }
 
 
-//we will use this class in c++ to laydown and parse all of the variable data that the animations will need, and subclass it in BP to utilize the AnimGraph for it's state
-//machines and animation TransitionRules, which would be reacting to the variable data that's constantly updating in c++.
-//Additionaly, we can update the variable animation data using an FAnimInstanceProxy struct, for optimisation.
+
 
 //with the core functionality and behaviour of animations defined in both our custom c++ and BP AnimInstance class, we can expand on this basic animation system setup by incorporating0
 
