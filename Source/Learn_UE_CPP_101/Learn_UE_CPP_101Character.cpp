@@ -260,7 +260,7 @@ void ALearn_UE_CPP_101Character::FireTrace()
 	UMyAnimInstance* MyAnimInstance = Cast<UMyAnimInstance>( GetMesh()->GetAnimInstance() );
 	MyAnimInstance->PlayMyMontage();
 
-	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, FString("Attempting to interact..."));
+	//GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, FString("Attempting to interact..."));
 
 	FCollisionQueryParams CollisionQuery;
 	CollisionQuery.AddIgnoredActor(this);
