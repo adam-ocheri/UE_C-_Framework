@@ -12,5 +12,7 @@ public class Learn_UE_CPP_101 : ModuleRules
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 
+		PublicDependencyModuleNames.AddRange(new string[] { "UnrealEd" });
+
 	}
 }

@@ -4,7 +4,7 @@
 #include "MyAnimInstance.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Animation/AnimNode_StateMachine.h"
-#include "Learn_UE_CPP_101Character.h"
+
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 

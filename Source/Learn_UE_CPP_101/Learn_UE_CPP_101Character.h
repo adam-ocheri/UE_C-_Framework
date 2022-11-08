@@ -85,7 +85,7 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return Camera; }
 
-	int32 Health = 100;
+	float Health = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UCapsuleComponent* Collision;

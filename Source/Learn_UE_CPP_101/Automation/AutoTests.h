@@ -10,6 +10,6 @@
 class LEARN_UE_CPP_101_API AutoTests
 {
 public:
-	AutoTests();
-	~AutoTests();
+	
+	
 };

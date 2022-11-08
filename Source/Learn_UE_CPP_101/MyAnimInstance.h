@@ -7,8 +7,9 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimInstanceProxy.h"
+#include "Learn_UE_CPP_101Character.h"
+#include "MyCharacterMovementComponent.h"
 
-//#include "MyCharacterMovementComponent.h"
 #include "MyAnimInstance.generated.h"
 
 
