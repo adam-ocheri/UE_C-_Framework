@@ -10,6 +10,5 @@
 class LEARN_UE_CPP_101_API MyCharacter_specTest
 {
 public:
-	MyCharacter_specTest();
-	~MyCharacter_specTest();
+	
 };

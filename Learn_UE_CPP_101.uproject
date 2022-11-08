@@ -40,6 +40,10 @@
 		{
 			"Name": "FunctionalTestingEditor",
 			"Enabled": true
+		},
+		{
+			"Name": "AutomationDriverTests",
+			"Enabled": true
 		}
 	]
 }

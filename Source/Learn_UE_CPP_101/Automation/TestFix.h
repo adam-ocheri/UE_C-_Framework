@@ -10,6 +10,5 @@
 class LEARN_UE_CPP_101_API TestFix
 {
 public:
-	TestFix();
-	~TestFix();
+	
 };

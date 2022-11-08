@@ -14,7 +14,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpawnPlayerTest, "RegimeChange_API.Player.Stat
 	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter | EAutomationTestFlags::CriticalPriority);
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPlayerHealthTest, "RegimeChange_API.Player.Status.Player Can Take Damage",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter | EAutomationTestFlags::CriticalPriority);
+	EAutomationTestFlags::CommandletContext | EAutomationTestFlags::ProductFilter | EAutomationTestFlags::CriticalPriority);
 
 bool FSpawnPlayerTest::RunTest(const FString& Parameters)
 {
@@ -23,6 +23,7 @@ bool FSpawnPlayerTest::RunTest(const FString& Parameters)
 	ALearn_UE_CPP_101Character* MyCharacter = World->SpawnActor<ALearn_UE_CPP_101Character>();
 	if (MyCharacter)
 	{
+		
 		bool bHealthOK = TestEqual(FString("Initial Health is Maxed"), MyCharacter->Health, 100.0f);
 		if (bHealthOK)
 		{
