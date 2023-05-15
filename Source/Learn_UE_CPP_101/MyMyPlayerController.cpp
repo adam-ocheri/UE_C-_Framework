@@ -5,6 +5,8 @@
 #include "Learn_UE_CPP_101Character.h"
 #include "Kismet/GameplayStatics.h"
 
+#include "MyCustomLogDefs.h"
+
 //1. PlayerState - "InitPlayerState" and "OnRep_PlayerState"				-	(Via inculding the custom PlayerState class header file)
 //2. Getting the Controlled Pawn via a Cast									-	(Via UGameplayStatics)
 //3. Getting a reference to the Controller in the game mode via a Cast		-	(Via UGameplayStatics)
@@ -46,8 +48,13 @@ AMyMyPlayerController::AMyMyPlayerController()
 
 void AMyMyPlayerController::BeginPlay()
 {
-
-
+	
+	this->ClientMessage("MyPlayerContoller sent a Client Message!", *this->GetName(), 10.0f); // prints at a different logging space - press `~` in-game to view message
+	
+	//CUSTOM LOG
+	VSCREENMSG(FString("HELLO!!!!!!!!! THIS IS A CUSTOM LOG MESSAGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
+	V_LOG(LogTemp, FString("Custom LOG HERE!!!!"));
+	V_LOGM(LogTemp, "%d number of times!% f health remaining!", 10, 0.5554372);
 
 	MyPawn = Cast<ALearn_UE_CPP_101Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	if (MyPawn != nullptr)

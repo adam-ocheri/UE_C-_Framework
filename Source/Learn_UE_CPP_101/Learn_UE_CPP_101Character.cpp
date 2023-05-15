@@ -12,17 +12,73 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
-
+#include "MyObject.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "NumStruct.h"
 
+#include "Perception/AISense_Hearing.h"
+#include "GameFramework/DamageType.h"
+#include "Perception/AISense_Damage.h"
+#include "MyTemplate.h"
+//#include "UObject/ObjectMacros.h"
+#include "BlueprintEditorSettings.h"
+#include "Engine/StreamableManager.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "Engine/ObjectLibrary.h"
+
 //////////////////////////////////////////////////////////////////////////
 // ALearn_UE_CPP_101Character
+
+
+
+
+ALearn_UE_CPP_101Character::ALearn_UE_CPP_101Character()
+{
+}
+
+ALearn_UE_CPP_101Character::~ALearn_UE_CPP_101Character()
+{
+	//FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	//AssetRegistryModule.Get().OnAssetAdded().RemoveAll(this);
+}
+
+void* ALearn_UE_CPP_101Character::operator new(size_t _Size, void* _Where)
+{
+	//return _Where;
+}
+
+ALearn_UE_CPP_101Character::ALearn_UE_CPP_101Character(ALearn_UE_CPP_101Character* ThisPtr)
+{
+	//SharedThis(ThisPtr);
+}
+
+void ALearn_UE_CPP_101Character::OnAssetAdded(const FAssetData& AssetData)
+{
+	// An asset was discovered by the asset registry.
+	// This means it was either just created or recently found on disk.
+	// Make sure code in this function is fast or it will slow down the gathering process.
+	UE_LOG(LogTemp, Warning, TEXT("OnAssetAdded Fired!"));
+}
+
 
 ALearn_UE_CPP_101Character::ALearn_UE_CPP_101Character(const FObjectInitializer& ObjectInitializer) // update construcxtor in cpp file too
 	: Super { ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName) }
 {
+
+	// Load the asset registry module to listen for updates
+	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	AssetRegistryModule.Get().OnAssetAdded().AddUObject(this, &ALearn_UE_CPP_101Character::OnAssetAdded);
+
+	//TODO ----------------------------------------------
+
+	TLazyObjectPtr<UCapsuleComponent> LazyObj = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Lazy Collision"));
+	if (LazyObj.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Lazy Collision is Valid"));
+		UE_LOG(LogTemp, Warning, TEXT("LAzy Obj: %s"), *LazyObj.Get()->GetName());
+	}
+	
 	static ConstructorHelpers::FObjectFinder<USoundCue> SoundObject(TEXT("SoundCue'/Game/StarterContent/Audio/Explosion_Cue.Explosion_Cue'"));
 	SoundToPlay = SoundObject.Object;
 
@@ -64,7 +120,7 @@ ALearn_UE_CPP_101Character::ALearn_UE_CPP_101Character(const FObjectInitializer&
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	Camera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-
+	
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -72,7 +128,7 @@ ALearn_UE_CPP_101Character::ALearn_UE_CPP_101Character(const FObjectInitializer&
 
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-	GetCapsuleComponent()->SetHiddenInGame(false);
+	//GetCapsuleComponent()->SetHiddenInGame(false);
 	
 
 	// Configure character movement
@@ -84,6 +140,8 @@ ALearn_UE_CPP_101Character::ALearn_UE_CPP_101Character(const FObjectInitializer&
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
+	
+	
 
 	//
 	Collision = CreateDefaultSubobject<UCapsuleComponent>(FName("HitCollision"));
@@ -103,14 +161,632 @@ ALearn_UE_CPP_101Character::ALearn_UE_CPP_101Character(const FObjectInitializer&
 	//Collision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	Collision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	//Attachment setups
-	
+
+
+	//static ConstructorHelpers::FClassFinder<ALearn_UE_CPP_101Character> Child(TEXT("Blueprint'/Game/MyLearn_UE_CPP_101Character.MyLearn_UE_CPP_101Character'"));
+	//ChildBP = Child.Class;
 }
 
+void ALearn_UE_CPP_101Character::LoadItems_Deferred()
+{
+	for (auto const & Asset : ItemList)
+	{
+		const UObject* ItemData = Asset.GetAsset();
+		UE_LOG(LogTemp, Warning, TEXT("DEFERRED_EXECUTION - Looping....."));
+		UE_LOG(LogTemp, Warning, TEXT("DEFERRED_ Asset loaded? : %s"), *(Asset.IsAssetLoaded() ? FString("True") : FString("False")));
+		UE_LOG(LogTemp, Warning, TEXT("DEFERRED_ Primary Asset ID : %s"), *Asset.GetPrimaryAssetId().ToString());
+		UE_LOG(LogTemp, Warning, TEXT("DEFERRED_ Object Path : %s"), *Asset.ObjectPath.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("DEFERRED_ Package Path : %s"), *Asset.PackagePath.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("DEFERRED_ Package Name : %s"), *Asset.PackageName.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("________________________________________________________________________________"));
+	}
+}
 
 
 void ALearn_UE_CPP_101Character::BeginPlay()
 {
+	//TODO List::
+	{
+		//! Learn:				Delegates | Plugins | Subsystems | 
+		//! Learn:	        	AI Prediction , Team, EQS | ControlRig | Timeline Component | Spline Component | Niagara Component | Chaos Component & Force Fields | Post Processing | Level Streaming |  WorldPartition
+		//! Web:				FHttp, FJson and Async operations | Replication | EOS
+		//! Understand:			Static vs Dynamic Casting | TypeDefs | Template ConstExpressions | Assertions | Widgets 100% (TWeakChild ?)
+		//! GetFancy:			Slate | AssetFactory |  Tie | TDecay?! | Threads |
+		
+	}
+
 	Super::BeginPlay();
+
+	// ObjectLibrary
+
+	{
+		
+		UE_LOG(LogTemp, Warning, TEXT("MyObjectLibrary - try......."));
+
+		UObjectLibrary* ObjectLibrary = UObjectLibrary::CreateLibrary(UTexture2D::StaticClass(), false, GIsEditor);
+		ObjectLibrary->AddToRoot(); // DONT delete when garbage collecting
+		ObjectLibrary->bRecursivePaths = true;
+		ObjectLibrary->LoadAssetDataFromPath(TEXT("/Game/StarterContent/Textures"));
+		
+		ObjectLibrary->LoadAssetsFromAssetData(); // Loades everything, try sync and use async if cant load sync
+
+		UE_LOG(LogTemp, Warning, TEXT("MyObjectLibrary - Name : %s"), *ObjectLibrary->GetName());
+
+		
+		// Specifically Load asynchronously
+		ObjectLibrary->GetAssetDataList(ItemList);
+
+		TArray<FSoftObjectPath> ItemsToStream;
+		FStreamableManager Streamable;
+		for (int32 i = 0; i < ItemList.Num(); ++i)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ITEMSTOSTREAM are found!"));
+			ItemsToStream.AddUnique(ItemList[i].ToSoftObjectPath());
+		}
+		Streamable.RequestAsyncLoad(ItemsToStream, FStreamableDelegate::CreateUObject(this, &ALearn_UE_CPP_101Character::LoadItems_Deferred));
+
+		//Async Loading
+		/*
+		for (int32 i = 0; i < AssetDatas.Num(); ++i)
+		{
+			FAssetData& AssetData = AssetDatas[i];
+
+			TArray<FSoftObjectPath> ItemsToStream;
+			FStreamableManager& Streamable = UGameGlobals::Get().StreamableManager;
+			for (int32 i = 0; i < AssetDatas.Num(); ++i)
+			{
+				ItemsToStream.AddUnique(AssetDatas[i].ToStringReference());
+			}
+			//Streamable.RequestAsyncLoad(ItemsToStream, FStreamableDelegate::CreateUObject(this, &UGameCheatManager::GrantItemsDeferred));
+
+			//Handle Tags and Values
+			{
+				FString FoundTypeNameString = AssetData.TagsAndValues.FindChecked(GET_MEMBER_NAME_CHECKED(UTexture2D, Filter));
+
+				if (!FoundTypeNameString.IsEmpty()) // && FoundTypeNameString.Contains(TEXT("FooType"))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("MyObjectLibrary - AssetData Found for UTEXTURE2D class - Tags&Values : %s"), *FoundTypeNameString);
+
+					UE_LOG(LogTemp, Warning, TEXT("Asset loaded? : %s"), *(AssetData.IsAssetLoaded() ? FString("True") : FString("False")));
+					UE_LOG(LogTemp, Warning, TEXT("Primary Asset ID : %s"), *AssetData.GetPrimaryAssetId().ToString());
+					UE_LOG(LogTemp, Warning, TEXT("Object Path : %s"), *AssetData.ObjectPath.ToString());
+					UE_LOG(LogTemp, Warning, TEXT("Package Path : %s"), *AssetData.PackagePath.ToString());
+					UE_LOG(LogTemp, Warning, TEXT("Package Name : %s"), *AssetData.PackageName.ToString());
+					//return AssetData;
+				}
+			}
+			
+		}
+		*/
+	}
+
+	//Asset Registy
+	
+	{
+		/*
+			The Asset Registry is an editor subsystem which gathers information about unloaded assets asynchronously as the editor loads.
+			This information is stored in memory so the editor can create lists of assets without loading them.
+			The information is authoritative and is kept up to date automatically as assets are changed in memory or files are changed on disk.
+			The Content Browser is the primary consumer for this system, but it may be used anywhere in editor code.
+		*/
+
+		/*
+		
+			1) CANNOT use `Asset.GetAsset()` if `!Asset.IsAssetLoaded()` - meaning, cannot dereference the nullptr pointer and get the object asset if it is not loaded in memory - only the FAssetData instance
+			   is valid in this case, which is the representation of the asset - but it is not the living asset itself
+
+			2) The AssetRegistry makes us adopt a convention for folder structure, careful planning of Package Names, Packes Paths, and Object Paths,
+		
+		*/
+
+		//All assets in a path
+		{
+			FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+			TArray<FAssetData> AssetData;
+			AssetRegistryModule.Get().GetAssetsByPath(FName("/Game/StarterContent"), AssetData, true); // `recursive = true` to search in subfolders as well
+
+			int32 iteration = 0;
+
+			for (FAssetData const& Asset : AssetData)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Asset Registry Loop (PATH) - current iteration: %d | object is: %s"), iteration, *Asset.AssetName.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Asset loaded? : %s"), *(Asset.IsAssetLoaded() ? FString("True") : FString("False")));
+				UE_LOG(LogTemp, Warning, TEXT("Primary Asset ID : %s"), *Asset.GetPrimaryAssetId().ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Object Path : %s"), *Asset.ObjectPath.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Package Path : %s"), *Asset.PackagePath.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Package Name : %s"), *Asset.PackageName.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("________________________________________________________________________________"));
+				++iteration;
+
+				if (Asset.IsAssetLoaded() && Asset.GetClass() == UStaticMesh::StaticClass())
+				{
+					UObject* ObjectRef = Asset.GetAsset();
+					UStaticMesh* StaticMesh = Cast<UStaticMesh>(ObjectRef);
+
+					if (StaticMesh)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("PARSED UOBJECT TO STATIC MESH - Cast Successful"));
+						UE_LOG(LogTemp, Warning, TEXT("________________________________________________________________________________"));
+					}
+				}
+				
+			}
+		}
+
+		//All assets in a Package
+		{
+			FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+			TArray<FAssetData> AssetData;
+			AssetRegistryModule.Get().GetAssetsByPackageName(FName("/Game/NewerBP"), AssetData); // P_Fire
+
+			int32 iteration = 0;
+
+			for (FAssetData const& Asset : AssetData)
+			{
+				FStreamableManager Manager;
+				Manager.Unload(Asset.ToSoftObjectPath());
+
+				UE_LOG(LogTemp, Warning, TEXT("Asset Registry Loop (PACKAGE!) - current iteration: %d | object is: %s"), iteration, *Asset.AssetName.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Asset loaded? : %s"), *(Asset.IsAssetLoaded() ? FString("True") : FString("False")));
+				UE_LOG(LogTemp, Warning, TEXT("Primary Asset ID : %s"), *Asset.GetPrimaryAssetId().ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Object Path : %s"), *Asset.ObjectPath.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Package Path : %s"), *Asset.PackagePath.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Package Name : %s"), *Asset.PackageName.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("________________________________________________________________________________"));
+
+				if (!Asset.IsAssetLoaded())
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Asset is NOT LOADED!"));
+					//Load Asset if it isn't loaded
+					FSoftObjectPath Path = Asset.ToSoftObjectPath();
+					Manager.RequestAsyncLoad(Path, FStreamableDelegate::CreateLambda([this, Asset]() {
+						AActor* LoadedAsset = Cast<AActor>(Asset.GetAsset());
+						if (LoadedAsset) {
+							LoadedAsset->SetActorLocation(FVector(0, 0, 200));
+							UE_LOG(LogTemp, Warning, TEXT("MyActor Loaded!! : %s"), *LoadedAsset->GetName());
+						}
+						
+
+					}));
+				}
+				
+
+				++iteration;
+			}
+		}
+
+		//All assets of a class
+		{
+			FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+			TArray<FAssetData> AssetData;
+			const FName Class = UStaticMesh::StaticClass()->GetFName();
+			AssetRegistryModule.Get().GetAssetsByClass(Class, AssetData);
+
+			int32 iteration = 0;
+
+			for (FAssetData const& Asset : AssetData)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Asset Registry Loop (CLASS) - current iteration: %d | object is: %s"), iteration, *Asset.GetAsset()->GetName());
+				UE_LOG(LogTemp, Warning, TEXT("Asset loaded? : %s"), *(Asset.IsAssetLoaded() ? FString("True") : FString("False")));
+				UE_LOG(LogTemp, Warning, TEXT("Primary Asset ID : %s"), *Asset.GetClass()->GetFName().ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Object Path : %s"), *Asset.ObjectPath.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Package Path : %s"), *Asset.PackagePath.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Package Name : %s"), *Asset.PackageName.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("________________________________________________________________________________"));
+				++iteration;
+			}
+		}
+
+		//Using a filter
+		{
+			
+			FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+			TArray<FAssetData> AssetData;
+
+			FARFilter Filter; 
+			//Filter.ClassNames.Append({ FName("Blueprint") });					// Will search for the specified type(s) - 
+			/*
+			Can only search for UE Native Types, and "Blueprint" - meaning, you cannot search for 
+			your child BP Character "BP_Soldier" using your specialized "ASoldier" Class, only through "ACharacter".
+			*/
+			//Filter.PackagePaths.Append({ FName("/Game/StarterContent/Particles"), FName("/Game/StarterContent/Audio"), FName("/Game") } );				// Will search for the specified type(s) only in the defined path, i.e "Game/Characters" path
+			//Filter.PackagePaths.Append({ FName("/Game/Characters") });
+			Filter.ObjectPaths.Append({FName("/Game/MyTick_Char.MyTick_Char")});	// Will include this object path in the search
+			Filter.bRecursivePaths = false;
+			Filter.bRecursiveClasses = false;
+
+			AssetRegistryModule.Get().GetAssets(Filter, AssetData);
+
+			int32 iteration = 0;
+
+			for (FAssetData const& Asset : AssetData)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Asset Registry Loop (FILTER_ASSETS) - current iteration: %d | object is: %s"), iteration, *Asset.AssetName.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Asset loaded? : %s"), *(Asset.IsAssetLoaded() ? FString("True") : FString("False")));
+				UE_LOG(LogTemp, Warning, TEXT("Primary Asset ID : %s"), *Asset.GetClass()->GetName());
+				UE_LOG(LogTemp, Warning, TEXT("Object Path : %s"), *Asset.ObjectPath.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Package Path : %s"), *Asset.PackagePath.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Package Name : %s"), *Asset.PackageName.ToString());
+				for (auto const& KVPair : Asset.TagsAndValues.CopyMap())
+				{
+					UE_LOG(LogTemp, Warning, TEXT("FOUND A KVP"));
+					UE_LOG(LogTemp, Warning, TEXT("KVP - Key : %s"), *KVPair.Key.ToString());
+					UE_LOG(LogTemp, Warning, TEXT("KVP - Value : %s"), *KVPair.Value);
+				}
+
+				for (auto const& KVPair : Asset.TagsAndValues)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("FOUND A KVP2"));
+					UE_LOG(LogTemp, Warning, TEXT("KVP2 - Key : %s"), *KVPair.Key.ToString());
+					UE_LOG(LogTemp, Warning, TEXT("KVP2 - Value : %s"), *KVPair.Value.GetValue());
+				}
+				/*
+				FAssetTagValueRef Ref = Asset.TagsAndValues.FindTag(FName("WeaponState"));
+				if (!Ref.GetValue().IsEmpty())
+				{
+					UE_LOG(LogTemp, Warning, TEXT("KVP - Trying to find reference string... : %s"), *Ref.GetValue());
+				}
+				*/
+				
+				
+				UE_LOG(LogTemp, Warning, TEXT("________________________________________________________________________________"));
+				++iteration;
+			}
+		}
+		
+	}
+
+	//Smart Pointers
+
+	{
+		UE_LOG(LogTemp, Warning, TEXT("________________________________________________________________________________"));
+		TUniquePtr<int> Ptr(new int(30));
+		*Ptr = 29;
+		UE_LOG(LogTemp, Warning, TEXT("Smart Pointer (UNIQUE) value is: %d"), *Ptr);
+
+		UE_LOG(LogTemp, Warning, TEXT("________________________________________________________________________________"));
+
+		TSharedPtr<int> SPtr1(new int(42));
+		TSharedPtr<int> SPtr2 = SPtr1;
+		UE_LOG(LogTemp, Warning, TEXT("Smart Pointer (SHARED_1) value is: %d"), *SPtr1);
+		UE_LOG(LogTemp, Warning, TEXT("Smart Pointer (SHARED_2) value is: %d"), *SPtr2);
+		UE_LOG(LogTemp, Warning, TEXT("Changing value of shared ptr...."));
+		*SPtr2 *= 2;
+		UE_LOG(LogTemp, Warning, TEXT("Post Change:"));
+		UE_LOG(LogTemp, Warning, TEXT("Smart Pointer (SHARED_1) value is: %d"), *SPtr1);
+		UE_LOG(LogTemp, Warning, TEXT("Smart Pointer (SHARED_2) value is: %d"), *SPtr2);
+
+		UE_LOG(LogTemp, Warning, TEXT("________________________________________________________________________________"));
+
+		TWeakPtr<int> WPtr = SPtr2;
+		*WPtr.Pin() = 440;
+		UE_LOG(LogTemp, Warning, TEXT("Smart Pointer (WEAK) value is: %d"), *WPtr.Pin());
+		UE_LOG(LogTemp, Warning, TEXT("Smart Pointer (SHARED) value is: %d"), *SPtr2);
+		UE_LOG(LogTemp, Warning, TEXT("________________________________________________________________________________"));
+
+		//! TSharedRef - Does the class need to supply an override for the 'new' operator???
+		//! INVESTIGATE
+		// TSharedPtr<ALearn_UE_CPP_101Character*> SharedPtr = MakeShared<ALearn_UE_CPP_101Character*>(this);
+		// TSharedRef<ALearn_UE_CPP_101Character> SharedRef (*SharedPtr);
+		// FString srName = SharedRef.Get().GetName();
+		// UE_LOG(LogTemp, Warning, TEXT("Smart Pointer (SHARED) value is: %s"), *srName);
+
+		TSharedPtr<int32> SharedPtr (new int32 (42));
+		TSharedRef<int32> SharedRef(SharedPtr.ToSharedRef());
+		SharedPtr.Reset();
+		int32 value = SharedRef.Get();
+		UE_LOG(LogTemp, Warning, TEXT("Smart Pointer (SHARED_REF) value is: %d"), value);
+		UE_LOG(LogTemp, Warning, TEXT("________________________________________________________________________________"));
+
+		//UObjects derived classes
+		TObjectPtr<ALearn_UE_CPP_101Character> ObjPtr(this);
+		UE_LOG(LogTemp, Warning, TEXT("CHAR: Smart Pointer (OBJECT_PTR) Health value is: %f"), ObjPtr.Get()->Health);
+
+		MyString = FString("Nah Uh!!");
+		UE_LOG(LogTemp, Warning, TEXT("CHAR: Smart Pointer (OBJECT_PTR) MyString value is: %s"), *ObjPtr.Get()->MyString);
+		ObjPtr.Get()->MyString = FString("Hell Yeah!!!");
+		UE_LOG(LogTemp, Warning, TEXT("CHAR: Post Change in ObjectPtr - MyString value is: %s"), *MyString);
+
+		MyObjPtr = GetWorld()->SpawnActor<AActor>();
+		UE_LOG(LogTemp, Warning, TEXT("ObjectPtr Actor Name: %s"), *MyObjPtr.Get()->GetName());
+
+		//TLazyObjectPtr
+
+		TLazyObjectPtr<ALearn_UE_CPP_101Character> LazyObj(this);
+		if (LazyObj.IsValid())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Lazy OvjectPtr is Valid"));
+			UE_LOG(LogTemp, Warning, TEXT("LAzy Obj: %s"), *LazyObj.Get()->GetName());
+		}
+
+		//TSoftObjectPtr
+
+		FSoftObjectPath PathTo(FString("/Game/StarterContent/Textures/T_Ground_Grass_D.T_Ground_Grass_D"));
+		SPtr = (PathTo);
+		SPtr.LoadSynchronous();
+		if (SPtr.IsValid()) {
+			UTexture2D* Texture = SPtr.Get();
+			UE_LOG(LogTemp, Warning, TEXT("Texture 1 Loaded!!!"));
+			UE_LOG(LogTemp, Warning, TEXT("TextureName: %s"), *Texture->GetName());
+		}
+
+		FSoftObjectPath PathTo1(FString("/Game/StarterContent/Textures/T_ground_Moss_D.T_ground_Moss_D"));
+		AssetPtr = (PathTo1);
+		UTexture2D* TextureAsset = AssetPtr.LoadSynchronous();
+		if (TextureAsset) {
+			UE_LOG(LogTemp, Warning, TEXT("Texture 2 Loaded!!!"));
+			UE_LOG(LogTemp, Warning, TEXT("TextureName: %s"), *AssetPtr.Get()->GetName());
+		}
+
+
+		FStreamableManager StreamableManager;
+		FSoftObjectPath PathTo2 (FString("/Game/StarterContent/Textures/T_Concrete_Poured_D.T_Concrete_Poured_D"));
+		TSoftObjectPtr<UTexture2D> MyAssetPtr (PathTo2);
+		UTexture2D* Texture =  MyAssetPtr.LoadSynchronous();
+		if (!Texture) // If Asset hasn't loaded yet, AsyncLoad it
+		{
+			StreamableManager.RequestAsyncLoad(PathTo2, FStreamableDelegate::CreateLambda([this, MyAssetPtr]()
+			{
+				UTexture2D* LoadedTexture = Cast<UTexture2D>(MyAssetPtr.Get());
+				if (LoadedTexture != nullptr)
+				{
+					// Asset has successfully loaded Asynchronously - can now do something with it
+					UE_LOG(LogTemp, Warning, TEXT("Texture 3 ASYNC Loaded!!!"));
+				}
+			}));
+		}
+		else	// Asset successfully loaded Synchronously
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Texture 3 HAS Loaded!!!"));
+			UE_LOG(LogTemp, Warning, TEXT("TextureName: %s"), *Texture->GetName());
+		}
+
+	}
+	
+
+	//Template Functionality
+	{
+		ALearn_UE_CPP_101Character* Inst = SpawnAnyActor<ALearn_UE_CPP_101Character>(GetWorld(), ALearn_UE_CPP_101Character::StaticClass(), FVector(0, 0, 500), FRotator(0, 0, 0));
+		if (Inst)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Template spawn Worked!!! instance is %s"), *Inst->GetName());
+			Inst->GetMesh()->SetSimulatePhysics(true);
+		}
+
+		ALearn_UE_CPP_101Character* NewActor = UMyGenericClass<ALearn_UE_CPP_101Character>::DoSomething(this);
+		TMyContainer<ALearn_UE_CPP_101Character, UCameraComponent>::SpawnComponent(this);
+
+		TMyRealContainer<ALearn_UE_CPP_101Character*> CharacterContainer;
+		//CharacterContainer.AddIndex(this);
+		CharacterContainer.Add(this);
+		CharacterContainer.AddIndex(Inst);
+		CharacterContainer.PrintAll();
+
+
+
+		AActor* Obj = ActOnSomething<AActor>();
+		UE_LOG(LogTemp, Warning, TEXT("Newly created Object via template function! name is: %s"), *Obj->GetName());
+	}
+	
+
+	//TArray
+	{
+		TArray<float> Arr;
+		Arr.Add(1.0f);
+		Arr.Append({ 2.0f, 3.0f, 4.0f, 5.0f });
+		Arr.Insert(999.0f, 0);
+		Arr.EmplaceAt(0, 251.5f);
+		bool bIsEmpty = Arr.IsEmpty();
+		bool bContains = Arr.Contains(432.0f);
+		bool bIndexIsValid = Arr.IsValidIndex(0);
+
+		for (int32 i = 0; i < Arr.Num(); ++i)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Looping over array... Index is: %d | value is: %f"), i, Arr[i]);
+		}
+	}
+
+	//TSet
+	{
+		TSet<float> Set1;
+		TSet<float> Set2;
+		Set1.Add(1.0f);
+		Set1.Add(1.0f);
+		Set1.Add(1.0f);
+		Set1.FindOrAdd(2.0f);
+		Set1.Append({ 3.0f, 4.0f, 5.0f });
+		
+		
+		for (float num: Set1)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Looping over Set...  value is: %f"), num);
+		}
+
+		float num = Set1.FindOrAdd(2.0f);
+		TSet Union = Set1.Union(Set2);
+		TSet Intersection = Set1.Intersect(Set2);
+		TSet Difference = Set1.Difference(Set2);
+		bool bContains = Set1.Contains(6.0f);
+	}
+
+	//TMap
+	{
+		TMap<FString, float> Map1;
+		Map1.Add(FString("Element 1"), 440.0f);
+		Map1.Add(FString("Element 2"), 540.0f);
+		Map1.Add(FString("Element 3"), 640.0f);
+
+		float num = *Map1.Find("Element 1");
+		
+
+		for (TTuple<FString, float>& Pair : Map1)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Looping over Map...  Key is: %s | Value is: %f"), *Pair.Key, Pair.Value);
+		}
+	}
+
+	//TTuple
+	{
+		TTuple <float, int32> MyTuple;
+		MyTuple.Key = 42.0f;
+		MyTuple.Value = 420;
+
+		UE_LOG(LogTemp, Warning, TEXT("Logging Tuple...  Key is: %f | Value is: %d"), MyTuple.Key, MyTuple.Value);
+	}
+
+	//Min/Max
+	{
+		TArray<float> MyVars;
+		MyVars.Append({ 1.0f, 202.0f, 5221.0f, 98237.0f, 0.01f });
+		const float MaxValue = FMath::Max<float>(MyVars); //dont need to know the index of the max value
+		UE_LOG(LogTemp, Warning, TEXT("max value within this array is: %f"), MaxValue);
+
+		TArray<int32> MyInts;
+		MyInts.Append({ 23, 921, 62, 4239, 2 });
+		int32 MaxIndex;
+		const int32 MaxValueInIndex = FMath::Max<int32>(MyInts, &MaxIndex);
+		UE_LOG(LogTemp, Warning, TEXT("index of the max value is: %d"), MaxIndex);
+	}
+
+	
+	
+	//Relative Logging
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *GetClass()->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(__FUNCSIG__));
+		UE_LOG(LogTemp, Warning, TEXT("%d"), __LINE__);
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(__FUNCTION__));
+		//UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(__FUNCDNAME__));
+
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(__FUNCTIONW__));
+		UE_LOG(LogTemp, Warning, TEXT("%d"), __LINE__);
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(__FILE__));
+	}
+	
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(__BASE_FILE__));
+	//Class members can be iterated upon - as long as they are gathered by the Reflection System
+	/*
+		The engine uses Macro declarations as additional declarations for C++ classes, functions and variables - in order for 
+		them to be extendable and accessible to Blueprints and to the project editor.
+		They can also accept arguements for further articulating the setup needed for the annotated code.
+		Found at: Engine/Source/Runtime/CoreUObject/Public/UObject/ObjectMacros.h => Line #597
+
+		These macros are used as annotations for the Unreal Header Tool, which is responsible for converting our annotated code 
+		into auto generated code (that we should never be concerned about) for the engine to expose the annotated classes and members for
+		modifications in the editor.
+		UHT will parse this code, see those anotations (like UCLASS()), and know that it needs to generate some code about that class and 
+		place it somewhere (and obviously remove the annotations afterwards).
+		Part of that generated code goes in that "MyObject.generated.h" file, and part of that code is injected in the location of 
+		that GENERATED_BODY() macro just before we compile.
+
+		Reflection is the ability of a program to examine itself at runtime. This is hugely useful and is a foundational technology 
+		of the Unreal engine, powering many systems such as detail panels in the editor, serialization, garbage collection, network replication, 
+		and Blueprint/C++ communication. However, C++ doesn’t natively support any form of reflection, so Unreal has its own system to harvest, query, 
+		and manipulate information about C++ classes, structs, functions, member variables, and enumerations. We typically refer to reflection as the 
+		property system since reflection is also a graphics term.
+
+		The type hierarchy for the property system looks like this:
+
+		UField
+			UStruct
+				UClass (C++ class)
+				UScript++++++Struct (C++ struct)
+				UFunction (C++ function)
+
+			UEnum (C++ enumeration)
+
+			UProperty (C++ member variable or function parameter)
+
+				(Many subclasses for different types)
+		UStruct is the basic type of aggregate structures (anything that contains other members, such as a C++ class, struct, or function), and shouldn’t be confused 
+		with a C++ struct (that's UScriptStruct). UClass can contain functions or properties as their children, while UFunction and UScriptStruct are limited to just properties.
+
+		You can get the UClass or UScriptStruct for a reflected C++ type by writing UTypeName::StaticClass() or FTypeName::StaticStruct(), and you can get the type for a UObject 
+		instance using Instance->GetClass() (it's not possible to get the type of a struct instance since there is no common base class or required storage for structs).
+
+		Unreal has a robust system for handling game objects. The base class for objects in Unreal is UObject. The UCLASS macro can be used to tag classes 
+		derived from UObject so that the UObject handling system is aware of them.
+		UObjects can have member variables (known as properties) or functions of any type. However, for the Unreal Engine to recognize and manipulate those variables 
+		or functions, they must be marked with special macros and must conform to certain type standards. For details on those standards, refer to 
+		the Properties and UFunctions reference pages.
+		This is why we can create a function that returns an unreal data type, such as UCameraComponent* GetCamera(){return MyCamera;}
+	*/
+
+	//CDO
+	{
+		{
+			UClass* MyObject = UMyObject::StaticClass();
+			;
+			for (TFieldIterator<FProperty> PropertyIterator(MyObject); PropertyIterator; ++PropertyIterator)
+			{
+				FProperty* Property = *PropertyIterator;
+
+				UE_LOG(LogTemp, Warning, TEXT("LOOPING OVER : UMyObject Properties - now at : % s"), *Property->GetName());
+
+			}
+
+			for (TFieldIterator<UFunction> FunctionIterator(MyObject); FunctionIterator; ++FunctionIterator)
+			{
+				UFunction* Function = *FunctionIterator;
+
+				UE_LOG(LogTemp, Warning, TEXT("Looping OVER : UMyObject Function - now at : %s"), *Function->GetName());
+			}
+		}
+		UE_LOG(LogTemp, Warning, TEXT("Finished Looping. Prepare for begining new task... \n Now Getting Bass Class CDO:"));
+
+		//-------------------------------------------------------------------------------------------------------------------------------------
+
+		//Changing CDO attributes for the c++ class
+		/*
+			UObject is the base class for objects managed by Unreal and is required to
+			get our class garbage collected, replicated over the network, serialized, and more.
+
+			UObject keeps the StaticClass() form
+			UClass holds the default object of the class
+		*/
+		{
+			UClass* BaseClass = UMyObject::StaticClass();
+			UMyObject* BaseCDO = BaseClass->GetDefaultObject<UMyObject>();
+			//! SAME AS
+			UMyObject* BaseCDO_ = GetMutableDefault<UMyObject>();
+			// ! OR AS
+			UMyObject* MyObject = UMyObject::StaticClass()->GetDefaultObject<UMyObject>();
+
+			UMyObject* BaseClass_BeforeEdit = NewObject<UMyObject>(this, BaseClass, NAME_None, RF_NoFlags, BaseCDO, true);
+			UE_LOG(LogTemp, Warning, TEXT("BassClass before modifying: %f"), BaseClass_BeforeEdit->MyForce);
+
+			BaseCDO->MyForce = 15.0f;
+			UE_LOG(LogTemp, Warning, TEXT("Modified CDO property......."));
+
+			UMyObject* BaseClass_AfterEdit = NewObject<UMyObject>(this, BaseClass, NAME_None, RF_NoFlags, BaseCDO, true);
+			UE_LOG(LogTemp, Warning, TEXT("BaseClass after modifying: %f"), BaseClass_AfterEdit->MyForce);
+
+			//Get all instances that use this CDO
+			TArray<UObject*> ActiveInstancesOfCDO;
+			BaseCDO->GetArchetypeInstances(ActiveInstancesOfCDO);
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("Task Finished. Prepare for begining new task... \n Now Getting Derived Class CDO:"));
+
+		//Changing CDO attributes for the BP class
+		{
+			UClass* DerivedBPClass = LoadClass<UMyObject>(NULL, TEXT("Blueprint'/Game/BP_MyObject.BP_MyObject_C'"));
+			UMyObject* DerivedBPCDO = DerivedBPClass->GetDefaultObject<UMyObject>();
+
+			UMyObject* DerivedBPClass_BeforeEdit = NewObject<UMyObject>(this, DerivedBPClass, NAME_None, RF_NoFlags, DerivedBPCDO, true);
+			UE_LOG(LogTemp, Warning, TEXT("BassClass before modifying: %f"), DerivedBPClass_BeforeEdit->MyForce);
+
+			DerivedBPCDO->MyForce = 30.0f;
+			UE_LOG(LogTemp, Warning, TEXT("Modified CDO property......."));
+
+			UMyObject* DerivedBPClass_AfterEdit = NewObject<UMyObject>(this, DerivedBPClass, NAME_None, RF_NoFlags, DerivedBPCDO, true);
+			UE_LOG(LogTemp, Warning, TEXT("BaseClass after modifying: %f"), DerivedBPClass_AfterEdit->MyForce);
+		}
+	}
+	
+	
+		
+	
 
 	Collision->OnComponentHit.AddUniqueDynamic(this, &ALearn_UE_CPP_101Character::OnHit);
 
@@ -214,14 +890,6 @@ void ALearn_UE_CPP_101Character::Tick(float DeltaTime)
 
 }
 
-
-
-
-
-
-//////////////////////////////////////////////////////////////////////////
-// Input
-
 void ALearn_UE_CPP_101Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up gameplay key bindings
@@ -252,6 +920,14 @@ void ALearn_UE_CPP_101Character::SetupPlayerInputComponent(class UInputComponent
 
 void ALearn_UE_CPP_101Character::FireTrace()
 {
+	//You can think of the CDO as a Dormant object which is never instantiated - instead, it is used as a template upon which new objects of a particular class are instantiated
+	/*ALearn_UE_CPP_101Character* Char = GetMutableDefault<ALearn_UE_CPP_101Character>();
+	Char->Health = 51.0f;
+	Char->SaveConfig();*/
+
+	//Trigger AI Listener Perception event
+	//UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, this, 0.0f, FName("Noise"));
+
 	FVector3d LocationForMusic(991.f,2760.f,50.f);
 	DrawDebugLine(GetWorld(), LocationForMusic, LocationForMusic + FVector(0, 0, 1000), FColor::Purple, false, 5.0f);
 	UGameplayStatics::PlaySoundAtLocation(this, MusicToPlay3D, LocationForMusic);
@@ -264,10 +940,12 @@ void ALearn_UE_CPP_101Character::FireTrace()
 
 	FCollisionQueryParams CollisionQuery;
 	CollisionQuery.AddIgnoredActor(this);
+	CollisionQuery.bTraceComplex = true;
+	
 
 
 	FHitResult HitResults;
-	FVector Start(GetActorLocation());
+	FVector Start(GetActorLocation() + (GetActorForwardVector() * 50));
 	FVector End(Start + (GetActorForwardVector() * 500));
 	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResults, Start, End, ECollisionChannel::ECC_Camera, CollisionQuery);
 
@@ -276,7 +954,7 @@ void ALearn_UE_CPP_101Character::FireTrace()
 	FVector TraceStartLocation;
 	GetActorEyesViewPoint(TraceStartLocation, TraceRotation);
 	FVector TraceEndLocation = FVector(UKismetMathLibrary::Conv_RotatorToVector(TraceRotation) * 500 + TraceStartLocation);
-	bool bInteract = GetWorld()->LineTraceSingleByChannel(TraceResult, TraceStartLocation, TraceEndLocation, ECollisionChannel::ECC_Camera, CollisionQuery);
+	bool bInteract = GetWorld()->LineTraceSingleByChannel(TraceResult, TraceStartLocation + (GetActorForwardVector() * 50), TraceEndLocation, ECollisionChannel::ECC_Camera, CollisionQuery);
 
 	DrawDebugLine(GetWorld(), HitResults.TraceStart, HitResults.TraceEnd, FColor::Red, false, 5.0f);
 	DrawDebugLine(GetWorld(), TraceResult.TraceStart, TraceResult.TraceEnd, FColor::Green, false, 5.0f);
@@ -285,6 +963,19 @@ void ALearn_UE_CPP_101Character::FireTrace()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Orange, FString("Forward Trace Hit Something!"));
 
+		if (HitResults.GetActor() != nullptr)
+		{
+			//TSubclassOf<UDamageType> DamageType = UDamageType::StaticClass();
+			
+			//UClass* DamageTypeClass = UDamageType::StaticClass();
+			TSubclassOf<UDamageType> DamageType = (UDamageType::StaticClass());
+			DamageType.Get();
+			FDamageEvent DamageEvent(DamageType);
+			HitResults.GetActor()->TakeDamage(20.0f, DamageEvent, GetInstigatorController(), this);
+
+			GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, FString("Trying to damage enemy.....FORWARD"));
+		}
+
 		if (HitResults.GetActor()->Implements<UInteract>())//(TraceResults.GetActor()->GetClass()->ImplementsInterface(UInteract::StaticClass()))
 		{
 			IInteract::Execute_InteractWithObject(HitResults.GetActor());
@@ -292,9 +983,24 @@ void ALearn_UE_CPP_101Character::FireTrace()
 	}
 	else if (bInteract)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Orange, FString("Camera Trace Hit Something!"));
+		if (TraceResult.GetActor() != nullptr)
+		{
+			//TSubclassOf<UDamageType> DamageType = UDamageType::StaticClass();
+
+			//UClass* DamageTypeClass = UDamageType::StaticClass();
+
+			//Deal Damage & Report a damage event to the Hit Actor
+			TSubclassOf<UDamageType> DamageType = (UDamageType::StaticClass());
+			DamageType.Get()->GetClass();
+			FDamageEvent DamageEvent(DamageType);
+			TraceResult.GetActor()->TakeDamage(20.0f, DamageEvent, GetInstigatorController(), this);
+			UAISense_Damage::ReportDamageEvent(this, TraceResult.GetActor(), this, 20, TraceResult.TraceStart, TraceResult.Location);
+			GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, FString("Trying to damage enemy.....CAMERA"));
+		}
+		
 		if (TraceResult.GetActor()->Implements<UInteract>())
 		{
+			GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Orange, FString("Camera Trace Hit Something!"));
 			IInteract::Execute_InteractWithObject(TraceResult.GetActor());
 		}
 	}
@@ -376,9 +1082,20 @@ void ALearn_UE_CPP_101Character::OnHit(UPrimitiveComponent* HitComponent, AActor
 	CollisionHit = Hit;
 }
 
+void ALearn_UE_CPP_101Character::GetMyObject(UMyObject* Object)
+{
+	// &MyStaticClass == &MyClass
+	UClass* MyStaticClass = UMyObject::StaticClass();
+	UClass* MyClass = Object->GetClass();
+
+	//Class Default Object
+	UMyObject* CDO = MyClass->GetDefaultObject<UMyObject>();
+
+	//Get all instances that use this CDO
+	TArray<UObject*> ActiveInstancesOfCDO;
+	CDO->GetArchetypeInstances(ActiveInstancesOfCDO);
+}
 
 
-
-//with the core functionality and behaviour of animations defined in both our custom c++ and BP AnimInstance class, we can expand on this basic animation system setup by incorporating0
 
 

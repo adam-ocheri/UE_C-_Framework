@@ -1,0 +1,2 @@
+float3 color = mul(A, B);
+return color;

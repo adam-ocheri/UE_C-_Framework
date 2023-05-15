@@ -24,7 +24,7 @@ bool FSpawnPlayerTest::RunTest(const FString& Parameters)
 	if (MyCharacter)
 	{
 		
-		bool bHealthOK = TestEqual(FString("Initial Health is Maxed"), MyCharacter->Health, 100.0f);
+		bool bHealthOK = TestEqual("Initial Health is Maxed", MyCharacter->Health, 100.0f);
 		if (bHealthOK)
 		{
 			AddInfo(FString("Health is maxed to 100 when the player spawns"));

@@ -12,7 +12,10 @@
 				"Engine",
 				"UMG",
 				"Blutility",
-				"UMGEditor"
+				"UMGEditor",
+				"AIModule",
+				"FunctionalTesting",
+				"CoreUObject"
 			]
 		}
 	],

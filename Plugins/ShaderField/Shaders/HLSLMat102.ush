@@ -1,0 +1,39 @@
+Shader "Custom/SimpleVertexShader"
+{
+    Properties
+    {
+    }
+
+    SubShader
+    {
+        Tags {"RenderType"="Opaque"},
+        LOD 200;
+
+        Pass
+        {
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma target 3.0
+
+            struct FVertexInput
+            {
+                float3 VertexPos : POSITION;
+            };
+
+            struct FVertexOutput
+            {
+                float4 Position : SV_POSITION;
+            };
+
+            FVertexOutput vert(FVertexInput input)
+            {
+                FVertexOutput output;
+                output.Position = float4(input.VertexPos, 1);
+                return output;
+            }
+
+            ENDCG
+        }
+    }
+    FallBack "Diffuse"
+}

@@ -1,0 +1,51 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "ShaderField",
+	"Description": "",
+	"Category": "Other",
+	"CreatedBy": "Adam",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "ShaderField",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Mac"
+			],
+			"AdditionalDependencies": [
+				"AIModule"
+			],
+			"Configurations": [
+				{
+					"Name": "Debug",
+					"Definitions": [
+						"UE_BUILD_DEBUG",
+						"MYPLUGIN_DEBUG",
+						"MYPLUGIN_ENABLE_FEATURE",
+						"MYPLUGIN_LOGGING_VERBOSE"
+					]
+				},
+				{
+					"Name": "Release",
+					"Definitions": [
+						"UE_BUILD_RELEASE",
+						"MYPLUGIN_RELEASE",
+						"MYPLUGIN_DISABLE_FEATURE",
+						"MYPLUGIN_LOGGING_MINIMAL"
+					]
+				}
+			]
+		}
+	]
+}

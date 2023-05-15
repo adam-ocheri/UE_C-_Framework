@@ -10,9 +10,9 @@ public class Learn_UE_CPP_101 : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay","UMG" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "AIModule", "NavigationSystem", "GameplayTasks" });
 
-		PublicDependencyModuleNames.AddRange(new string[] { "UnrealEd" });
+		PublicDependencyModuleNames.AddRange(new string[] { "UnrealEd"});
 
 	}
 }

@@ -4,4 +4,6 @@
 #include "Modules/ModuleManager.h"
 
 IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, Learn_UE_CPP_101, "Learn_UE_CPP_101" );
- 
+//DEFINE_LOG_CATEGORY(LogMyGame);
+
+
